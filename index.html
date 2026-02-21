@@ -60,23 +60,39 @@ function onScanSuccess(decodedText) {
 document.getElementById("status").innerHTML =
 "جارِ التحديث...";
 
-// إرسال الطلب بدون CORS قراءة
-fetch(API_URL + "?action=scan&code=" + decodedText, {
-  method: "GET",
-  mode: "no-cors"
+fetch(API_URL, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({ code: decodedText })
 })
-.then(() => {
+.then(res => res.json())
+.then(data => {
+
+if(data.success){
 
 document.getElementById("status").innerHTML =
 "✔ تم التحديث بنجاح";
 document.getElementById("status").className =
 "status success";
 
+}else{
+
+document.getElementById("status").innerHTML =
+"❌ لم يتم العثور على القطعة";
+document.getElementById("status").className =
+"status error";
+
+}
+
 })
 .catch(() => {
 
 document.getElementById("status").innerHTML =
 "⚠ خطأ في الاتصال";
+document.getElementById("status").className =
+"status error";
 
 });
 
