@@ -92,8 +92,18 @@ Html5Qrcode.getCameras().then(devices => {
 
 if(devices && devices.length){
 
+// 🔍 البحث عن الكاميرا الخلفية
+let backCamera = devices.find(device =>
+device.label.toLowerCase().includes("back") ||
+device.label.toLowerCase().includes("rear") ||
+device.label.toLowerCase().includes("environment")
+);
+
+// إذا لم نجد خلفية نستخدم الأولى
+let cameraId = backCamera ? backCamera.id : devices[0].id;
+
 html5QrCode.start(
-devices[0].id,
+cameraId,
 { fps: 10, qrbox: 250 },
 onScanSuccess
 );
@@ -101,6 +111,10 @@ onScanSuccess
 }
 
 }).catch(err => {
+document.getElementById("status").innerHTML =
+"⚠ لا يمكن تشغيل الكاميرا";
+});
+  .catch(err => {
 document.getElementById("status").innerHTML =
 "⚠ لا يمكن تشغيل الكاميرا";
 });
