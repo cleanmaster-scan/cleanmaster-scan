@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clean Master - Scan</title>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#111;
+color:white;
+text-align:center;
+}
+
+h2{
+margin-top:20px;
+}
+
+#reader{
+width:100%;
+max-width:500px;
+margin:20px auto;
+}
+
+.status{
+margin-top:15px;
+font-size:18px;
+}
+.success{
+color:#00ff88;
+}
+.error{
+color:#ff4d4d;
+}
+</style>
+</head>
+
+<body>
+
+<h2>📷 مسح الباركود</h2>
+
+<div id="reader"></div>
+
+<div class="status" id="status">
+جاهز للمسح...
+</div>
+
+<script>
+
+const API_URL = "https://script.google.com/macros/s/AKfycbz3WzMOeSor29E-lnH9TAbstTvumNywlCiB25MYyK8fuDT1ZWLF6sWmimhcBLzI1GQEZA/exec";
+
+function onScanSuccess(decodedText) {
+
+document.getElementById("status").innerHTML =
+"جارِ التحديث...";
+
+fetch(API_URL + "?action=scan&code=" + decodedText)
+.then(res => res.json())
+.then(data => {
+
+if(data.success){
+
+document.getElementById("status").innerHTML =
+"✔ تم التحديث بنجاح";
+document.getElementById("status").className =
+"status success";
+
+}else{
+
+document.getElementById("status").innerHTML =
+"❌ لم يتم العثور على القطعة";
+document.getElementById("status").className =
+"status error";
+
+}
+
+})
+.catch(() => {
+document.getElementById("status").innerHTML =
+"⚠ خطأ في الاتصال";
+});
+
+}
+
+const html5QrCode = new Html5Qrcode("reader");
+
+Html5Qrcode.getCameras().then(devices => {
+
+if(devices && devices.length){
+
+html5QrCode.start(
+devices[0].id,
+{ fps: 10, qrbox: 250 },
+onScanSuccess
+);
+
+}
+
+}).catch(err => {
+document.getElementById("status").innerHTML =
+"⚠ لا يمكن تشغيل الكاميرا";
+});
+
+</script>
+
+</body>
+</html>
