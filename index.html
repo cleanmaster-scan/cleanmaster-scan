@@ -30,9 +30,11 @@ margin:20px auto;
 margin-top:15px;
 font-size:18px;
 }
+
 .success{
 color:#00ff88;
 }
+
 .error{
 color:#ff4d4d;
 }
@@ -88,35 +90,20 @@ document.getElementById("status").innerHTML =
 
 const html5QrCode = new Html5Qrcode("reader");
 
-Html5Qrcode.getCameras().then(devices => {
-
-if(devices && devices.length){
-
-// 🔍 البحث عن الكاميرا الخلفية
-let backCamera = devices.find(device =>
-device.label.toLowerCase().includes("back") ||
-device.label.toLowerCase().includes("rear") ||
-device.label.toLowerCase().includes("environment")
-);
-
-// إذا لم نجد خلفية نستخدم الأولى
-let cameraId = backCamera ? backCamera.id : devices[0].id;
-
+// تشغيل الكاميرا الخلفية مباشرة
 html5QrCode.start(
-cameraId,
+{ facingMode: { exact: "environment" } },
+{ fps: 10, qrbox: 250 },
+onScanSuccess
+).catch(err => {
+
+// إذا لم تعمل exact نستخدم environment عادي
+html5QrCode.start(
+{ facingMode: "environment" },
 { fps: 10, qrbox: 250 },
 onScanSuccess
 );
 
-}
-
-}).catch(err => {
-document.getElementById("status").innerHTML =
-"⚠ لا يمكن تشغيل الكاميرا";
-});
-  .catch(err => {
-document.getElementById("status").innerHTML =
-"⚠ لا يمكن تشغيل الكاميرا";
 });
 
 </script>
