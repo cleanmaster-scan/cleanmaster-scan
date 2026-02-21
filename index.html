@@ -60,6 +60,7 @@ function onScanSuccess(decodedText) {
 document.getElementById("status").innerHTML =
 "جارِ التحديث...";
 
+// إرسال الطلب بدون CORS قراءة
 fetch(API_URL + "?action=scan&code=" + decodedText, {
   method: "GET",
   mode: "no-cors"
@@ -77,28 +78,6 @@ document.getElementById("status").className =
 document.getElementById("status").innerHTML =
 "⚠ خطأ في الاتصال";
 
-}); {
-
-if(data.success){
-
-document.getElementById("status").innerHTML =
-"✔ تم التحديث بنجاح";
-document.getElementById("status").className =
-"status success";
-
-}else{
-
-document.getElementById("status").innerHTML =
-"❌ لم يتم العثور على القطعة";
-document.getElementById("status").className =
-"status error";
-
-}
-
-})
-.catch(() => {
-document.getElementById("status").innerHTML =
-"⚠ خطأ في الاتصال";
 });
 
 }
@@ -110,9 +89,9 @@ html5QrCode.start(
 { facingMode: { exact: "environment" } },
 { fps: 10, qrbox: 250 },
 onScanSuccess
-).catch(err => {
+).catch(() => {
 
-// إذا لم تعمل exact نستخدم environment عادي
+// fallback إذا لم تنجح exact
 html5QrCode.start(
 { facingMode: "environment" },
 { fps: 10, qrbox: 250 },
