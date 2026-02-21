@@ -60,9 +60,24 @@ function onScanSuccess(decodedText) {
 document.getElementById("status").innerHTML =
 "جارِ التحديث...";
 
-fetch(API_URL + "?action=scan&code=" + decodedText)
-.then(res => res.json())
-.then(data => {
+fetch(API_URL + "?action=scan&code=" + decodedText, {
+  method: "GET",
+  mode: "no-cors"
+})
+.then(() => {
+
+document.getElementById("status").innerHTML =
+"✔ تم التحديث بنجاح";
+document.getElementById("status").className =
+"status success";
+
+})
+.catch(() => {
+
+document.getElementById("status").innerHTML =
+"⚠ خطأ في الاتصال";
+
+}); {
 
 if(data.success){
 
