@@ -1,116 +1,156 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Clean Master - Scan</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
+
 body{
 margin:0;
+background:#000;
 font-family:Arial;
-background:#111;
-color:white;
-text-align:center;
-}
-
-h2{
-margin-top:20px;
+overflow:hidden;
 }
 
 #reader{
+position:fixed;
+top:0;
+left:0;
+width:100vw;
+height:100vh;
+}
+
+#statusBar{
+position:fixed;
+bottom:0;
 width:100%;
-max-width:500px;
-margin:20px auto;
+padding:20px;
+font-size:22px;
+font-weight:bold;
+text-align:center;
+background:rgba(0,0,0,.8);
+color:white;
 }
 
-.status{
-margin-top:15px;
-font-size:18px;
-}
+.ok{color:#00ff88}
+.err{color:#ff4d4d}
+.wait{color:#ffc107}
 
-.success{
-color:#00ff88;
-}
-
-.error{
-color:#ff4d4d;
-}
 </style>
 </head>
 
 <body>
 
-<h2>📷 مسح الباركود</h2>
-
 <div id="reader"></div>
 
-<div class="status" id="status">
-جاهز للمسح...
+<div id="statusBar">
+📷 وجّه الكاميرا نحو الباركود
 </div>
 
 <script>
 
-const API_URL = "https://script.google.com/macros/s/AKfycbxJYikZl_GNO-VB5liwZxZ1kRDrxMmzOZ0WOiSuJ3NdexXerH5sQ5KxyEXToN5SzGObMA/exec";
+const API = "ضع_رابط_النشر_هنا";
 
-function onScanSuccess(decodedText) {
+let scanning=true;
+let lastCode=null;
 
-document.getElementById("status").innerHTML =
-"جارِ التحديث...";
+const successSound =
+new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
 
-fetch(API_URL, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({ code: decodedText })
+const errorSound =
+new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg");
+
+
+function vibrate(){
+if(navigator.vibrate){
+navigator.vibrate(120);
+}
+}
+
+function onScanSuccess(code){
+
+if(!scanning || code===lastCode) return;
+
+lastCode=code;
+scanning=false;
+
+statusBar.innerHTML =
+"<span class='wait'>⏳ جاري تحديث الحالة...</span>";
+
+fetch(API,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+action:"scanItem",
+code:code
 })
-.then(res => res.json())
-.then(data => {
+})
 
-if(data.success){
+.then(r=>r.json())
 
-document.getElementById("status").innerHTML =
-"✔ تم التحديث بنجاح";
-document.getElementById("status").className =
-"status success";
+.then(res=>{
+
+if(res.success){
+
+statusBar.innerHTML =
+`<span class='ok'>✅ القطعة جاهزة</span>`;
+
+successSound.play();
+vibrate();
 
 }else{
 
-document.getElementById("status").innerHTML =
-"❌ لم يتم العثور على القطعة";
-document.getElementById("status").className =
-"status error";
+statusBar.innerHTML =
+"<span class='err'>⚠️ الباركود غير موجود</span>";
 
+errorSound.play();
+vibrate();
 }
 
-})
-.catch(() => {
+setTimeout(()=>{
+scanning=true;
+statusBar.innerHTML="📷 وجّه الكاميرا نحو الباركود";
+},1200);
 
-document.getElementById("status").innerHTML =
-"⚠ خطأ في الاتصال";
-document.getElementById("status").className =
-"status error";
+})
+
+.catch(()=>{
+
+statusBar.innerHTML =
+"<span class='err'>❌ خطأ في الاتصال</span>";
+
+errorSound.play();
+
+setTimeout(()=>{
+scanning=true;
+statusBar.innerHTML="📷 وجّه الكاميرا نحو الباركود";
+},1500);
 
 });
 
 }
 
+
 const html5QrCode = new Html5Qrcode("reader");
 
-// تشغيل الكاميرا الخلفية مباشرة
-html5QrCode.start(
-{ facingMode: { exact: "environment" } },
-{ fps: 10, qrbox: 250 },
-onScanSuccess
-).catch(() => {
+Html5Qrcode.getCameras().then(cameras=>{
 
-// fallback إذا لم تنجح exact
+let backCamera =
+cameras.find(c =>
+c.label.toLowerCase().includes("back")
+) || cameras[cameras.length-1];
+
 html5QrCode.start(
-{ facingMode: "environment" },
-{ fps: 10, qrbox: 250 },
+backCamera.id,
+{
+fps:20,
+qrbox:250
+},
 onScanSuccess
 );
 
